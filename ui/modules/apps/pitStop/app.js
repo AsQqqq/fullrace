@@ -43,8 +43,12 @@ angular.module('beamng.apps')
 
             <!-- Пополнение топлива -->
             <div style="margin-bottom: 20px;">
-              <input type="range" min="0" max="100" step="1" ng-model="fuelTarget" style="width: 100%; margin-bottom: 10px;">
-              <div style="margin-bottom: 8px; font-size: 14px; color: #333;">Заправить до: {{fuelTarget}}%</div>
+              <div style="margin-bottom: 6px; font-size: 14px; color: #333;">Заправить до (%):</div>
+              <input type="number" 
+                    ng-model="fuelTarget"
+                    ng-change="updateFuelTarget(fuelTarget)"
+                    min="0" max="100" step="1"
+                    style="width: 100%; margin-bottom: 10px; padding: 5px; text-align: center;">
               <button ng-click="refuel()" style="
                   padding: 10px 20px;
                   font-size: 16px;
@@ -58,7 +62,6 @@ angular.module('beamng.apps')
                   Время: <span id="fuelTime">--:--:--</span>
               </div>
             </div>
-          </div>
 
           <div ng-if="!conditionsOk" style="color:red; font-weight:bold;">
             Условия пит-стопа не выполнены!
@@ -91,8 +94,13 @@ angular.module('beamng.apps')
 
     $scope.status = false;
     $scope.conditionsOk = false;
-    $scope.fuelTarget = 100;
+    $scope.fuelTarget = 50; // дефолт
     $scope.currentFuel = 0;
+
+    $scope.updateFuelTarget = function(value) {
+      $scope.fuelTarget = parseFloat(value) || 0;
+      console.log("fuelTarget changed to:", $scope.fuelTarget);
+    };
 
     // Обновление данных топлива + проверка условий
     $scope.$on('streamsUpdate', function (event, s) {
@@ -102,7 +110,6 @@ angular.module('beamng.apps')
         $scope.currentFuel = Math.round((s.electrics.fuel || 0) * 100);
       });
 
-      // Проверка условий
       const isStopped = (s.electrics.wheelspeed || 0) < 0.1;
       const isEngineOff = (s.electrics.ignitionLevel || 0) === 0;
       const isParkingBrake = (s.electrics.parkingbrake || 0) > 0.1;
@@ -113,13 +120,26 @@ angular.module('beamng.apps')
 
     // Заправка машины
     $scope.refuel = function() {
-      if ($scope.fuelTarget > $scope.currentFuel) {
-        let newFuelValue = $scope.fuelTarget / 100;
-        bngApi.engineLua(`be:getPlayerVehicle(0):queueLuaCommand("electrics.values.fuel = ${newFuelValue}")`);
-        console.log("Refuel command sent: " + newFuelValue);
-      } else {
-        console.log("Refuel skipped. Current fuel >= target");
-      }
+      console.log("fuelTarget before refuel:", $scope.fuelTarget);
+      const percent = Math.max(0, Math.min(100, parseFloat($scope.fuelTarget) || 100)); // parseFloat!
+      const ratio = (percent / 100).toFixed(2);
+
+      bngApi.engineLua(`
+        local veh = be:getPlayerVehicle(0)
+        if veh then
+          veh:queueLuaCommand(string.format([[ 
+            for _, storage in pairs(energyStorage.getStorages()) do
+              local currentRatio = storage.storedEnergy / storage.energyCapacity
+              local targetRatio = %.2f
+              if currentRatio < targetRatio then
+                storage.storedEnergy = storage.energyCapacity * targetRatio
+              end
+            end
+          ]], ${ratio}))
+        end
+      `);
+
+      console.log("Refuel target:", percent + "%");
     };
 
     // Слушаем событие из Lua
