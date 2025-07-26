@@ -1,0 +1,18 @@
+{
+  "domElement": "<race-full-settings></race-full-settings>",
+  "name": "Настройки мода",
+  "types": [
+    "ui.apps.categories.racing",
+    "ui.apps.categories.controls"
+  ],
+  "description": "Настраивайте износ шин, режим питлейна и все подобное!",
+  "css": {
+    "top": "0%",
+    "left": "0%",
+    "width": "250px",
+    "height": "300px"
+  },
+  "author": "AsQ",
+  "version": "1.1",
+  "directive": "raceFullSettings"
+}

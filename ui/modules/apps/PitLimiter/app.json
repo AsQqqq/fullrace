@@ -1,0 +1,22 @@
+{
+  "domElement": "<pit-limiter-app></pit-limiter-app>",
+  "name": "Режим питлейна",
+  "types": [
+    "ui.apps.categories.racing",
+    "ui.apps.categories.controls"
+  ],
+  "description": "Индикатор показывающий режим питлейна",
+  "css": {
+    "width": "190px",
+    "height": "60px",
+    "min-width": "190px",
+    "min-height": "60px",
+    "max-width": "190px",
+    "max-height": "60px",
+    "right": "0%",
+    "bottom": "0%"
+  },
+  "author": "AsQ",
+  "version": "1.5",
+  "directive": "pitLimiterApp"
+}

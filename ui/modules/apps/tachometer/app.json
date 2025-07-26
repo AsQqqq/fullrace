@@ -1,0 +1,18 @@
+{
+  "domElement": "<tachometer-ui></tachometer-ui>",
+  "name": "RPM Тахометр",
+  "description": "Отображение текущих оборотов двигателя",
+  "types": [
+    "ui.apps.categories.racing",
+    "ui.apps.categories.vehicle_info"
+  ],
+  "css": {
+    "right": "0px",
+    "bottom": "0px",
+    "width": "150px",
+    "height": "50px"
+  },
+  "author": "AsQ",
+  "version": "1.0",
+  "directive": "tachometerUi"
+}

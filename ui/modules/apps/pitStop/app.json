@@ -1,0 +1,18 @@
+{
+  "domElement": "<pitstop-ui></pitstop-ui>",
+  "name": "Меню",
+  "description": "Меню питстопа",
+  "types": [
+    "ui.apps.categories.racing",
+    "ui.apps.categories.vehicle_info"
+  ],
+  "css": {
+    "width": "100%",
+    "height": "100%",
+    "min-width": "100%",
+    "min-height": "100%"
+  },
+  "author": "AsQ",
+  "version": "1.0",
+  "directive": "pitstopUi"
+}

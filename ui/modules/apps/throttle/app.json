@@ -1,0 +1,20 @@
+{
+  "name": "ThrottleIND",
+  "description": "Индикатор газа",
+  "author": "AsQ",
+  "version": "1.0",
+  "types": [
+    "ui.apps.categories.vehicle_info"
+  ],
+  "domElement": "<throttle></throttle>",
+  "preserveAspectRatio" : true,
+  "css": {
+    "height": "160px",
+    "width": "30px",
+    "max-height": "160px",
+    "max-width": "30px",
+    "right": "40%",
+    "bottom": "10%"
+  },
+  "directive": "throttle"
+}

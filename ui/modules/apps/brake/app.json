@@ -1,0 +1,20 @@
+{
+  "domElement": "<brake></brake>",
+  "name": "BrakeIND",
+  "description": "Индикатор томраза в игре",
+  "types": [
+    "ui.apps.categories.vehicle_info"
+  ],
+  "preserveAspectRatio" : true,
+  "css": {
+    "height": "160px",
+    "width": "30px",
+    "max-height": "160px",
+    "max-width": "30px",
+    "left": "40%",
+    "bottom": "10%"
+  },
+  "author": "AsQ",
+  "version": "1.3",
+  "directive": "brake"
+}

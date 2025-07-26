@@ -1,0 +1,20 @@
+{
+  "pitLimiterToggle": {
+    "cat": "RaceFull",
+    "order": 0,
+    "ctx": "tlua",
+    "onDown": "extensions.button.togglePitLimiter()",
+    "title": "Toggle Pit Limiter",
+    "desc": "Toggle the pit speed limiter",
+    "action": "pitLimiterToggle"
+  },
+  "pitStopMenuToggle": {
+    "cat": "RaceFull",
+    "order": 0,
+    "ctx": "tlua",
+    "onDown": "extensions.button.pitStopMenuToggle()",
+    "title": "Toggle Pit Stop Menu",
+    "desc": "None",
+    "action": "pitStopMenuToggle"
+  }
+}

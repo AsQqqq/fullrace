@@ -1,0 +1,18 @@
+{
+  "domElement": "<tyre-wear-monitor></tyre-wear-monitor>",
+  "name": "Дебаг информация мода",
+  "description": "Вывод информации в реальном времени",
+  "types": [
+    "ui.apps.categories.racing",
+    "ui.apps.categories.controls"
+  ],
+  "css": {
+    "right": "0px",
+    "top": "0px",
+    "width": "250px",
+    "height": "300px"
+  },
+  "author": "AsQ",
+  "version": "1.2",
+  "directive": "tyreWearMonitor"
+}

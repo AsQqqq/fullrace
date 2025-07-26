@@ -1,0 +1,1 @@
+setExtensionUnloadMode("FullRace", "manual")
