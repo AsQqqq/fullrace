@@ -2,89 +2,148 @@
 
 angular.module('beamng.apps')
 .component('tyreWearMonitor', {
-  template: `
-    <div style="padding:10px; color:white; font-size:14px; background:rgba(0,0,0,0.5); border-radius:6px; width:300px;">
-      <div style="margin-bottom:6px; font-weight:bold;">Tyre Wear & Thermals</div>
-      <div style="margin-bottom:6px;">Wear Multiplier: {{wearMultiplier}}x</div>
-      
-      <table style="width:100%; border-collapse: collapse; text-align:center; margin-bottom:10px;">
-        <thead>
-          <tr>
-            <th style="border-bottom:1px solid #888;">Wheel</th>
-            <th style="border-bottom:1px solid #888;">Cond %</th>
-            <th style="border-bottom:1px solid #888;">Temp °C</th>
-            <th style="border-bottom:1px solid #888;">Grip</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr ng-repeat="t in tyres">
-            <td>{{t.name}}</td>
-            <td>{{t.condition}}</td>
-            <td>{{t.avg_temp}}</td>
-            <td>{{t.tyreGrip}}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- Tachometer -->
-      <div style="font-size: 14px; line-height: 1.4; text-align: left; padding: 5px; border: 1px solid #444; border-radius: 4px;">
-        <div>RPM: <span id="rpmValue">0</span></div>
-        <div>Throttle: <span id="throttleValue">0%</span></div>
-        <div>Brake: <span id="brakeValue">0%</span></div>
-        <div>Speed: <span id="speedValue">0 km/h</span></div>
-        <div>Gear: <span id="gearValue">N</span></div>
-        <div>Fuel: <span id="fuelValue">0%</span></div>
-      </div>
-    </div>
-  `,
-  controller: function($scope) {
-    // Tyre Wear Logic
+  templateUrl: '/ui/modules/apps/Debug/app.html',
+  controller: ['$scope', function($scope) {
+    // Переменные UI
     $scope.wearMultiplier = 1;
     $scope.tyres = [];
+    $scope.data1 = '';
+    $scope.data2 = '';
+    $scope.data3 = '';
+    $scope.data4 = '';
 
-    $scope.$on('TyreWearThermals', function(event, data) {
-      if (!data || !data.data) return;
-      $scope.tyres = data.data;
-      $scope.wearMultiplier = data.wearMultiplier || 1;
-      $scope.$applyAsync();
-    });
-
-    // Tachometer Logic
+    // Потоки
+    const tyreStreams = ['TyreWearThermals'];
     const streams = ['engineInfo', 'electrics', 'throttle', 'brake'];
+    StreamsManager.add(tyreStreams);
     StreamsManager.add(streams);
 
-    $scope.$on('$destroy', function () {
+    $scope.$on('$destroy', function() {
+      StreamsManager.remove(tyreStreams);
       StreamsManager.remove(streams);
     });
 
-    $scope.$on('streamsUpdate', function (event, s) {
-      if (!s || !s.electrics || !s.engineInfo) return;
+    // Переменные для расхода топлива
+    let distanceTravelled = 0,
+        fuelUsed = 0,
+        avgFuelConsumption = 0,
+        range = 0,
+        fuelLevelLastReset = 0,
+        autoResetOk = false,
+        lastWheelSpeed = 0,
+        timer = 0,
+        prevTime = performance.now(),
+        curTime = prevTime;
+    let lastFuelCapacity;
 
-      // RPM
-      let rpm = Math.round(s.electrics.rpmTacho || 0);
-      document.getElementById('rpmValue').textContent = rpm;
+    $scope.reset = function() {
+      fuelUsed = 0;
+      avgFuelConsumption = 0;
+      range = 0;
+      fuelLevelLastReset = 0;
+      autoResetOk = false;
+      timer = 0;
+      prevTime = performance.now();
+      curTime = prevTime;
+    };
 
-      // Throttle
-      let throttle = Math.round((s.electrics.throttle || 0) * 100);
-      document.getElementById('throttleValue').textContent = throttle + '%';
-
-      // Brake
-      let brake = Math.round((s.electrics.brake || 0) * 100);
-      document.getElementById('brakeValue').textContent = brake + '%';
-
-      // Speed
-      let speed = Math.round((s.electrics.wheelspeed || 0) * 3.6);
-      document.getElementById('speedValue').textContent = speed + ' km/h';
-
-      // Gear
-      let gear = s.engineInfo[5] || 0;
-      if (gear === 0) gear = 'N';
-      else if (gear === -1) gear = 'R';
-      document.getElementById('gearValue').textContent = gear;
-
-      // Fuel
-      let fuel = Math.round((s.electrics.fuel || 0) * 100);
-      document.getElementById('fuelValue').textContent = fuel + '%';
+    $scope.$on('VehicleFocusChanged', function() {
+      $scope.reset();
     });
-  }
+
+    $scope.$on('streamsUpdate', function(event, s) {
+      if (!s) return;
+
+      // --- ЛОГИКА ШИН ---
+      if (s.TyreWearThermals && s.TyreWearThermals.data) {
+        $scope.wearMultiplier = s.TyreWearThermals.wearMultiplier || 1;
+        $scope.tyres = s.TyreWearThermals.data.map(t => ({
+          name: t.name,
+          condition: Math.floor(t.condition)
+        }));
+      }
+
+      // --- ЛОГИКА ТАХОМЕТРА + ТОПЛИВА ---
+      if (s.electrics && s.engineInfo) {
+        // RPM
+        let rpm = Math.round(s.electrics.rpmTacho || 0);
+        document.getElementById('rpmValue').textContent = rpm;
+
+        // Throttle
+        let throttle = Math.round((s.electrics.throttle || 0) * 100);
+        document.getElementById('throttleValue').textContent = throttle + '%';
+
+        // Brake
+        let brake = Math.round((s.electrics.brake || 0) * 100);
+        document.getElementById('brakeValue').textContent = brake + '%';
+
+        // Speed
+        let speed = Math.round((s.electrics.wheelspeed || 0) * 3.6);
+        document.getElementById('speedValue').textContent = speed + ' km/h';
+
+        // Gear
+        let gear = s.engineInfo[5] || 0;
+        if (gear === 0) gear = 'N';
+        else if (gear === -1) gear = 'R';
+        document.getElementById('gearValue').textContent = gear;
+
+        // Fuel
+        let fuel = Math.round((s.electrics.fuel || 0) * 100);
+        document.getElementById('fuelValue').textContent = fuel + '%';
+
+        // --- РАСЧЕТ СРЕДНЕГО РАСХОДА ---
+        let wheelSpeed = s.electrics.wheelspeed;
+        let currentFuel = s.engineInfo[11];
+        let fuelCapacity = s.engineInfo[12];
+
+        prevTime = curTime;
+        curTime = performance.now();
+        timer -= 0.001 * (curTime - prevTime);
+        if (timer < 0) {
+          if (wheelSpeed > 0.2 && wheelSpeed != lastWheelSpeed) {
+            distanceTravelled += ((1.0 - timer) * wheelSpeed);
+          }
+          timer = 1;
+        }
+        lastWheelSpeed = wheelSpeed;
+
+        if (fuelLevelLastReset === 0 && currentFuel > 0) {
+          distanceTravelled = 0;
+          fuelLevelLastReset = currentFuel;
+          lastFuelCapacity = fuelCapacity;
+        }
+
+        if (autoResetOk &&
+            (currentFuel >= fuelLevelLastReset || fuelCapacity != lastFuelCapacity)) {
+          distanceTravelled = 0;
+          fuelLevelLastReset = currentFuel;
+          lastFuelCapacity = fuelCapacity;
+          autoResetOk = false;
+        }
+
+        if (!autoResetOk &&
+            (currentFuel < fuelLevelLastReset || distanceTravelled > 0)) {
+          autoResetOk = true;
+        }
+
+        fuelUsed = fuelLevelLastReset - currentFuel;
+        avgFuelConsumption = (distanceTravelled > 0)
+          ? fuelUsed / distanceTravelled
+          : 0;
+
+        range = (avgFuelConsumption > 0)
+          ? UiUnits.buildString('distance', currentFuel / avgFuelConsumption, 2)
+          : (s.electrics.wheelspeed > 0.1 ? 'Infinity' : UiUnits.buildString('distance', 0));
+
+        $scope.data1 = UiUnits.buildString('distance', distanceTravelled, 1);
+        $scope.data2 = UiUnits.buildString('volume', fuelUsed, 2) + '/'
+                      + UiUnits.buildString('volume', currentFuel, 2) + '/'
+                      + UiUnits.buildString('volume', fuelCapacity, 1);
+        $scope.data3 = UiUnits.buildString('consumptionRate', avgFuelConsumption, 1);
+        $scope.data4 = range;
+      }
+
+      $scope.$applyAsync();
+    });
+  }]
 });

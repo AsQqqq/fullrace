@@ -1,0 +1,50 @@
+<div style="padding:10px; color:white; font-size:14px; background:rgba(0,0,0,0.5); border-radius:6px; width:95%; height: 95%;">
+    <div style="margin-bottom:6px; font-weight:bold;">Tyre Wear & Thermals</div>
+    <div style="margin-bottom:6px;">Wear Multiplier: {{wearMultiplier}}x</div>
+    
+    <table style="width:100%; border-collapse: collapse; text-align:center; margin-bottom:10px;">
+    <thead>
+        <tr>
+        <th style="border-bottom:1px solid #444; color: white;">Wheel</th>
+        <th style="border-bottom:1px solid #444; color: white;">Cond %</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="t in tyres" style="color: white;">
+        <td>{{t.name}}</td>
+        <td>{{t.condition}}%</td>
+        </tr>
+    </tbody>
+    </table>
+
+    <!-- Tachometer -->
+    <div style="font-size: 14px; line-height: 1.4; text-align: left; padding: 5px; border: 1px solid #444; border-radius: 4px;">
+    <div>RPM: <span id="rpmValue">0</span></div>
+    <div>Throttle: <span id="throttleValue">0%</span></div>
+    <div>Brake: <span id="brakeValue">0%</span></div>
+    <div>Speed: <span id="speedValue">0 km/h</span></div>
+    <div>Gear: <span id="gearValue">N</span></div>
+    <div>Fuel: <span id="fuelValue">0%</span></div>
+    </div>
+
+    <table style="width:100%; color: white;">
+		<tr>
+			<td>Traveled distance:</td>
+			<td>{{ data1 }}</td>
+		</tr>
+		<tr>
+			<td>Fuel:</td>
+			<td>{{ data2 }}</td>
+		</tr>
+		<tr>
+			<td>Fuel Consumption:</td>
+			<td>{{ data3 }}</td>
+		</tr>
+		<tr>
+			<td>Range:</td>
+			<td>{{ data4 }}</td>
+		</tr>
+	</table>
+	
+	<span style="position:absolute; top:2px; right: 2px; cursor: pointer;" class="material-icons" ng-click="reset($event)">autorenew</span>
+</div>
