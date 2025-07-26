@@ -49,6 +49,16 @@ local function setWearMultiplier(mult)
   log('I', 'tyreWear', 'Wear multiplier set to ' .. wearMultiplier)
 end
 
+local function resetTyres()
+  for i, wd in pairs(wheels.wheelRotators) do
+    if tyreData[i] then
+      tyreData[i].condition = 100
+      tyreData[i].temp = {WORKING_TEMP, WORKING_TEMP, WORKING_TEMP, WORKING_TEMP}
+    end
+  end
+  log('I', 'LuuksTyreThermalsAndWear', 'Tyres fully reset (condition and temperature).')
+end
+
 local function setInitialTyreCondition(frontLeft, frontRight, rearLeft, rearRight)
   for i, wd in pairs(wheels.wheelRotators) do
     local name = wd.name
@@ -288,6 +298,7 @@ end
 M.onInit = onInit
 M.onReset = onReset
 M.updateGFX = updateGFX
+M.resetTyres = resetTyres
 M.groundModelsCallback = groundModelsCallback
 
 return M

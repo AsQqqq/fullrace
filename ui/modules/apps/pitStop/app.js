@@ -27,7 +27,7 @@ angular.module('beamng.apps')
           <div ng-if="conditionsOk">
             <!-- Замена шин -->
             <div style="margin-bottom: 15px;">
-              <button style="
+              <button ng-click="replaceTyres()" style="
                   padding: 10px 20px;
                   font-size: 16px;
                   background: #333;
@@ -118,6 +118,16 @@ angular.module('beamng.apps')
       $scope.conditionsOk = isStopped && isEngineOff && isParkingBrake && isNeutral;
     });
 
+    $scope.replaceTyres = function() {
+      console.log("Tyres replacement triggered.");
+      bngApi.engineLua(`
+        local veh = be:getPlayerVehicle(0)
+        if veh then
+          veh:queueLuaCommand('extensions.LuuksTyreThermalsAndWear.resetTyres()')
+        end
+      `);
+    };
+    
     // Заправка машины
     $scope.refuel = function() {
       console.log("fuelTarget before refuel:", $scope.fuelTarget);
