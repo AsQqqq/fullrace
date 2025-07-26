@@ -1,6 +1,5 @@
 .vscode
 temp/*
-README.md
 main.py
 test.html
 test.js
