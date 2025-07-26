@@ -25,31 +25,27 @@ angular.module('beamng.apps')
           <h2 style="margin-bottom: 20px; font-size: 24px; font-weight: bold;">Пит-Стоп Меню</h2>
 
           <div ng-if="conditionsOk">
-            <!-- Замена шин -->
-            <div style="margin-bottom: 15px;">
-              <button ng-click="replaceTyres()" style="
-                  padding: 10px 20px;
-                  font-size: 16px;
-                  background: #333;
-                  color: white;
-                  border: none;
-                  border-radius: 4px;
-                  cursor: pointer;
-              ">Замена шин</button>
-              <div style="margin-top: 5px; font-size: 14px; color: #555;">
-                  Время: <span id="tyreTime">--:--:--</span>
-              </div>
+            <!-- Выбор замены шин -->
+            <div style="margin-bottom: 15px; text-align:left;">
+              <label>
+                <input type="checkbox" ng-model="doTyres" ng-change="updateTyreTarget(doTyres)">
+                Замена шин (10 сек)
+              </label>
             </div>
 
             <!-- Пополнение топлива -->
-            <div style="margin-bottom: 20px;">
+            <div style="margin-bottom: 20px; text-align:left;">
               <div style="margin-bottom: 6px; font-size: 14px; color: #333;">Заправить до (%):</div>
               <input type="number" 
                     ng-model="fuelTarget"
                     ng-change="updateFuelTarget(fuelTarget)"
                     min="0" max="100" step="1"
                     style="width: 100%; margin-bottom: 10px; padding: 5px; text-align: center;">
-              <button ng-click="refuel()" style="
+              <div style="font-size: 12px; color: #555;">Текущее: {{currentFuel}}%</div>
+            </div>
+
+            <!-- Выполнить питстоп -->
+            <button ng-click="startPitStop()" style="
                   padding: 10px 20px;
                   font-size: 16px;
                   background: #333;
@@ -57,29 +53,11 @@ angular.module('beamng.apps')
                   border: none;
                   border-radius: 4px;
                   cursor: pointer;
-              ">Заправить</button>
-              <div style="margin-top: 5px; font-size: 14px; color: #555;">
-                  Время: <span id="fuelTime">--:--:--</span>
-              </div>
-            </div>
+              ">Выполнить Пит-Стоп</button>
+          </div>
 
           <div ng-if="!conditionsOk" style="color:red; font-weight:bold;">
             Условия пит-стопа не выполнены!
-          </div>
-
-          <!-- Информация -->
-          <div style="
-            text-align: left;
-            font-size: 14px;
-            line-height: 1.5;
-            background: #f8f8f8;
-            padding: 10px;
-            border-radius: 4px;
-            color: #333;
-            margin-top: 10px;
-          ">
-            <div>Износ шин: LF <span id="lfWear">0%</span>, RF <span id="rfWear">0%</span>, LR <span id="lrWear">0%</span>, RR <span id="rrWear">0%</span></div>
-            <div>Топливо: {{currentFuel}} %</div>
           </div>
       </div>
     </div>
@@ -94,12 +72,22 @@ angular.module('beamng.apps')
 
     $scope.status = false;
     $scope.conditionsOk = false;
-    $scope.fuelTarget = 50; // дефолт
+    $scope.fuelTarget = 50;
     $scope.currentFuel = 0;
+    $scope.doTyres = false;
+
+    // Новая переменная для хранения последнего значения топлива
+    let lastFuelLevel = 0;
 
     $scope.updateFuelTarget = function(value) {
-      $scope.fuelTarget = parseFloat(value) || 0;
+      $scope.fuelTarget = Math.max(0, Math.min(100, parseFloat(value) || 0));
+      $scope.userSetFuel = true;
       console.log("fuelTarget changed to:", $scope.fuelTarget);
+    };
+    
+    $scope.updateTyreTarget = function(value) {
+      $scope.doTyres = value;
+      console.log("Tyre changed to:", $scope.doTyres);
     };
 
     // Обновление данных топлива + проверка условий
@@ -107,7 +95,20 @@ angular.module('beamng.apps')
       if (!s || !s.electrics || !s.engineInfo) return;
 
       $scope.$evalAsync(() => {
-        $scope.currentFuel = Math.round((s.electrics.fuel || 0) * 100);
+        const rawFuel = (s.electrics.fuel || 0) * 100;
+
+        // Если двигатель работает или fuel > 0, обновляем lastFuelLevel
+        if (rawFuel > 0.1) {
+          lastFuelLevel = Math.round(rawFuel);
+        }
+
+        // Текущее топливо = lastFuelLevel, если двигатель заглушен
+        $scope.currentFuel = lastFuelLevel;
+
+        // Если пользователь не трогал fuelTarget, синхронизируем его с баком
+        if (!$scope.userSetFuel) {
+          $scope.fuelTarget = $scope.currentFuel;
+        }
       });
 
       const isStopped = (s.electrics.wheelspeed || 0) < 0.1;
@@ -118,41 +119,19 @@ angular.module('beamng.apps')
       $scope.conditionsOk = isStopped && isEngineOff && isParkingBrake && isNeutral;
     });
 
-    $scope.replaceTyres = function() {
-      console.log("Tyres replacement triggered.");
-      bngApi.engineLua(`
-        local veh = be:getPlayerVehicle(0)
-        if veh then
-          veh:queueLuaCommand('extensions.LuuksTyreThermalsAndWear.resetTyres()')
-        end
-      `);
-    };
-    
-    // Заправка машины
-    $scope.refuel = function() {
-      console.log("fuelTarget before refuel:", $scope.fuelTarget);
-      const percent = Math.max(0, Math.min(100, parseFloat($scope.fuelTarget) || 100)); // parseFloat!
-      const ratio = (percent / 100).toFixed(2);
+    $scope.startPitStop = function() {
+      let doFuel = $scope.fuelTarget > $scope.currentFuel;
+      let totalTime = 0;
+      if ($scope.doTyres) totalTime += 10;
+      if (doFuel) totalTime += 20;
+
+      console.log(`Pitstop started: tyres=${$scope.doTyres}, fuel=${doFuel}, time=${totalTime}s`);
 
       bngApi.engineLua(`
-        local veh = be:getPlayerVehicle(0)
-        if veh then
-          veh:queueLuaCommand(string.format([[ 
-            for _, storage in pairs(energyStorage.getStorages()) do
-              local currentRatio = storage.storedEnergy / storage.energyCapacity
-              local targetRatio = %.2f
-              if currentRatio < targetRatio then
-                storage.storedEnergy = storage.energyCapacity * targetRatio
-              end
-            end
-          ]], ${ratio}))
-        end
+        extensions.pitstopControl.startPitTimer(${totalTime}, ${$scope.doTyres}, ${doFuel}, ${($scope.fuelTarget / 100).toFixed(2)})
       `);
-
-      console.log("Refuel target:", percent + "%");
     };
 
-    // Слушаем событие из Lua
     $scope.$on("PitStopMenuToggle", function (event, data) {
       $scope.$evalAsync(() => {
         $scope.status = data.enabled; 
