@@ -1,9 +1,9 @@
 {
-  "name" : " ",
+  "name" : "Race radar",
   "author": "AsQ",
   "version": "0.1",
   "description": "Navigation screen/minimap for your UI",
-  "directive": "oldnavigation",
+  "directive": "radarRace",
   "domElement": "<oldnavigation></oldnavigation>",
   "preserveAspectRatio": true,
   "css": {
