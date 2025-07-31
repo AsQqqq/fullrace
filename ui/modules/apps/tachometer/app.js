@@ -2,35 +2,41 @@
 
 angular.module('beamng.apps')
 .component('tachometerUi', {
-  template: `
-    <div style="
-      width:100%;
-      height:100%;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      background:rgba(0,0,0,0.5);
-      border-radius:4px;
-      color:white;
-      font-size:18px;
-      font-weight:bold;
-    ">
-      RPM: <span id="rpmValueTach" style="margin-left:5px;">0</span>
-    </div>
-  `,
-  controller: function($scope) {
+  templateUrl: '/ui/modules/apps/tachometer/app.html',
+  controller: function($scope, $element) {
     const streams = ['engineInfo', 'electrics'];
     StreamsManager.add(streams);
+
+    const tachFill = $element[0].querySelector('#tachFill');
+    const speedEl = $element[0].querySelector('#speedValue');
+    const gearEl = $element[0].querySelector('#gearValue');
+
+    const maxRPM = 7200;
+    const pathLength = 180;
+    tachFill.style.strokeDasharray = pathLength;
 
     $scope.$on('$destroy', function () {
       StreamsManager.remove(streams);
     });
 
     $scope.$on('streamsUpdate', function (event, s) {
-      if (!s || !s.electrics) return;
+      if (!s || !s.electrics || !s.engineInfo) return;
 
-      let rpm = Math.round(s.electrics.rpmTacho || 0);
-      document.getElementById('rpmValueTach').textContent = rpm;
+      // --- RPM как дуга ---
+      const rpm = Math.round(s.electrics.rpmTacho || 0);
+      const rpmPercent = Math.min(1, rpm / maxRPM);
+      tachFill.style.strokeDashoffset = (pathLength - (pathLength * rpmPercent));
+      console.log('RPM:', rpm, 'Offset:', tachFill.style.strokeDashoffset);
+
+      // --- Скорость ---
+      const speed = Math.round((s.electrics.wheelspeed || 0) * 3.6);
+      if (speedEl) speedEl.textContent = speed;
+
+      // --- Передача ---
+      let gear = s.engineInfo[5] || 0;
+      if (gear === 0) gear = 'N';
+      else if (gear === -1) gear = 'R';
+      if (gearEl) gearEl.textContent = gear;
     });
   }
 });

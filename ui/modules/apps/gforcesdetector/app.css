@@ -1,0 +1,105 @@
+@font-face {
+  font-family: 'Poetsen One';
+  src: url('./Montserrat Alternates.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.gforces-main-design {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 25vw;
+  height: auto;
+  padding: 1vh 2vw;
+  
+  text-align: center;
+  font-family: 'Poetsen One', 'Segoe UI', 'Roboto', Arial, sans-serif;
+  box-sizing: border-box;
+  position: relative;
+
+  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              border 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Убираем надпись LIVE */
+.gforces-main-design::before {
+  display: none;
+}
+
+.gforces-text-wrapper {
+  flex-basis: 100%;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.4em;
+  margin: 0;
+}
+
+.gforces-value {
+  display: inline-block;
+  color: #ffffff;
+  font-weight: 900;
+  font-size: clamp(1.8rem, 4vw, 3rem); /* Гибкий размер */
+  font-family: 'Poetsen One', 'Segoe UI', 'Roboto', Arial, sans-serif;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.gforces-unit {
+  display: inline-block;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 700;
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  font-family: 'Poetsen One', 'Segoe UI', 'Roboto', Arial, sans-serif;
+  line-height: 1;
+}
+
+.gforces-no-force {
+  display: inline-block;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 700;
+  font-size: clamp(0.9rem, 1.8vw, 1.3rem);
+  font-family: 'Poetsen One', 'Segoe UI', 'Roboto', Arial, sans-serif;
+  line-height: 1.1;
+}
+
+/* Анимация для экстремальных перегрузок */
+@keyframes danger-pulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.02); }
+}
+
+/* Адаптация под маленькие экраны */
+@media (max-width: 768px) {
+  .gforces-main-design {
+    max-width: 40vw;
+    padding: 2vh 4vw;
+  }
+  .gforces-text-wrapper {
+    gap: 0.2em;
+  }
+}
+
+@media (max-width: 480px) {
+  .gforces-main-design {
+    max-width: 60vw;
+    padding: 3vh 5vw;
+  }
+}
+
+/* Анимация загрузки */
+.gforces-main-design.loading .gforces-value {
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}

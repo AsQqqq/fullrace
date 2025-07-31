@@ -1,0 +1,17 @@
+{
+  "name" : "Old Navigation (Minimap)",
+  "author": "beamng.ui Team",
+  "version": "0.1",
+  "description": "Navigation screen/minimap for your UI",
+  "directive": "oldnavigation",
+  "domElement": "<oldnavigation></oldnavigation>",
+  "preserveAspectRatio": true,
+  "css": {
+    "width": "300px",
+    "height": "300px",
+    "top": "300px",
+    "left": "500px",
+    "min-width": "150px",
+    "min-height": "150px"
+  }
+}
